@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — Sierra Williams</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root {
+    --bg: #060608;
+    --surface: #0d0d12;
+    --accent: #E040A0;
+    --accent2: #B8A0D4;
+    --accent3: #FFB3C6;
+    --text: #f0eee8;
+    --muted: #5a5060;
+    --grid: rgba(224, 64, 160, 0.05);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* Cursor */
+  .cursor {
+    position: fixed;
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 40px; height: 40px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s, opacity 0.3s;
+    opacity: 0.5;
+  }
+
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .noise {
+    position: fixed;
+    inset: 0;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 200px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.1;
+  }
+  .orb-1 {
+    width: 500px; height: 500px;
+    background: var(--accent);
+    top: -150px; right: -100px;
+    animation: orbFloat 12s ease-in-out infinite;
+  }
+  .orb-2 {
+    width: 350px; height: 350px;
+    background: var(--accent2);
+    bottom: 10%; left: -80px;
+    animation: orbFloat 16s ease-in-out infinite reverse;
+  }
+
+  /* Nav */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 60px;
+    backdrop-filter: blur(12px);
+    background: rgba(6,6,8,0.6);
+    border-bottom: 1px solid rgba(224,64,160,0.08);
+    animation: slideDown 0.8s ease forwards;
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .nav-links {
+    display: flex;
+    gap: 48px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 0; height: 1px;
+    background: var(--accent);
+    transition: width 0.3s ease;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-back {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--accent); }
+
+  /* Page layout */
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding-top: 100px;
+  }
+
+  /* Left */
+  .contact-left {
+    padding: 80px 60px 80px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid rgba(255,255,255,0.04);
+    opacity: 0;
+    animation: fadeUp 0.9s ease 0.3s forwards;
+  }
+
+  .contact-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .contact-tag::before {
+    content: '';
+    display: block;
+    width: 40px; height: 1px;
+    background: var(--accent);
+  }
+
+  .contact-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(80px, 10vw, 148px);
+    line-height: 0.88;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    margin-bottom: 40px;
+  }
+  .contact-headline span {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--accent);
+  }
+
+  .contact-bio {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--muted);
+    max-width: 400px;
+    margin-bottom: 56px;
+  }
+  .contact-bio strong { color: var(--text); }
+
+  /* Direct links */
+  .direct-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .direct-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.04);
+    text-decoration: none;
+    transition: all 0.3s;
+    group: true;
+  }
+  .direct-link:hover {
+    border-color: rgba(224,64,160,0.25);
+    background: rgba(224,64,160,0.04);
+    padding-left: 32px;
+  }
+
+  .link-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .link-platform {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .link-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+  .direct-link:hover .link-value { color: var(--accent); }
+
+  .link-arrow {
+    color: var(--muted);
+    font-size: 18px;
+    transition: all 0.3s;
+  }
+  .direct-link:hover .link-arrow {
+    color: var(--accent);
+    transform: translate(4px, -4px);
+  }
+
+  /* Right — form */
+  .contact-right {
+    padding: 80px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeUp 0.9s ease 0.5s forwards;
+  }
+
+  .form-header {
+    margin-bottom: 40px;
+  }
+  .form-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    letter-spacing: 0.03em;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .form-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .form-input,
+  .form-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    padding: 14px 16px;
+    transition: border-color 0.2s, background 0.2s;
+    outline: none;
+  }
+  .form-input:focus,
+  .form-textarea:focus {
+    border-color: var(--accent);
+    background: rgba(224,64,160,0.04);
+  }
+  .form-input::placeholder,
+  .form-textarea::placeholder { color: var(--muted); }
+  .form-textarea {
+    resize: vertical;
+    min-height: 130px;
+    line-height: 1.6;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-submit {
+    width: 100%;
+    padding: 18px;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .form-submit:hover:not(:disabled) {
+    background: var(--accent2);
+    transform: translateY(-1px);
+  }
+  .form-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Status messages */
+  .form-status {
+    margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 14px 16px;
+    display: none;
+  }
+  .form-status.success {
+    display: block;
+    border: 1px solid rgba(74,222,128,0.3);
+    background: rgba(74,222,128,0.05);
+    color: #4ade80;
+  }
+  .form-status.error {
+    display: block;
+    border: 1px solid rgba(224,64,160,0.3);
+    background: rgba(224,64,160,0.05);
+    color: var(--accent3);
+  }
+
+  /* Footer */
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 32px 60px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  footer span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(30px, -30px); }
+    66% { transform: translate(-20px, 20px); }
+  }
+
+  /* Spinner */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(6,6,8,0.3);
+    border-top-color: var(--bg);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .form-submit.loading .spinner { display: block; }
+  .form-submit.loading .btn-text { display: none; }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+<div class="grid-bg"></div>
+<div class="noise"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<nav>
+  <a href="/" class="nav-logo">Sierra Williams</a>
+  <ul class="nav-links">
+    <li><a href="/Work.html">Work</a></li>
+    <li><a href="/About.html">About</a></li>
+    <li><a href="/Process.html">Process</a></li>
+    <li><a href="/Journal.html">Journal</a></li>
+  </ul>
+  <a href="/" class="nav-back">← Home</a>
+</nav>
+
+<div class="page">
+
+  <!-- LEFT -->
+  <div class="contact-left">
+    <div class="contact-tag">Get in touch</div>
+    <h1 class="contact-headline">
+      SAY<br>
+      <span>HELLO</span>
+    </h1>
+    <p class="contact-bio">
+      I'm always open to a good conversation — whether it's about a project, a collaboration, or just to connect. <strong>Drop me a message</strong> and I'll get back to you within 24–48 hours.
+    </p>
+
+    <div class="direct-links">
+      <a href="mailto:hello@sierrawilliams.ca" class="direct-link">
+        <div class="link-left">
+          <span class="link-platform">Email</span>
+          <span class="link-value">hello@sierrawilliams.ca</span>
+        </div>
+        <span class="link-arrow">↗</span>
+      </a>
+      <a href="https://www.linkedin.com/in/sierrawillliams/" target="_blank" class="direct-link">
+        <div class="link-left">
+          <span class="link-platform">LinkedIn</span>
+          <span class="link-value">/in/sierrawillliams</span>
+        </div>
+        <span class="link-arrow">↗</span>
+      </a>
+      <a href="https://github.com/sierrawillliams" target="_blank" class="direct-link">
+        <div class="link-left">
+          <span class="link-platform">GitHub</span>
+          <span class="link-value">sierrawillliams</span>
+        </div>
+        <span class="link-arrow">↗</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="contact-right">
+    <div class="form-header">
+      <div class="form-title">Send a Message</div>
+      <div class="form-sub">// Goes straight to my inbox</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">First Name</label>
+        <input type="text" class="form-input" id="firstName" placeholder="Jane">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name</label>
+        <input type="text" class="form-input" id="lastName" placeholder="Smith">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="email" placeholder="jane@example.com">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Subject</label>
+      <input type="text" class="form-input" id="subject" placeholder="What's on your mind?">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Message</label>
+      <textarea class="form-textarea" id="message" placeholder="Tell me more..."></textarea>
+    </div>
+
+    <button class="form-submit" id="submitBtn" onclick="sendEmail()">
+      <span class="btn-text">Send Message →</span>
+      <div class="spinner"></div>
+    </button>
+
+    <div class="form-status" id="formStatus"></div>
+  </div>
+
+</div>
+
+<footer>
+  <span>© 2026 Sierra Williams — All Rights Reserved</span>
+  <span>Kelowna, BC</span>
+  <span>Built with intention</span>
+</footer>
+
+<script>
+  // Init EmailJS
+  emailjs.init('TlnXkn9D4lftKds5g');
+
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+  });
+
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, button, .direct-link').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '20px';
+      cursor.style.height = '20px';
+      ring.style.width = '70px';
+      ring.style.height = '70px';
+      ring.style.opacity = '0.8';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '12px';
+      cursor.style.height = '12px';
+      ring.style.width = '40px';
+      ring.style.height = '40px';
+      ring.style.opacity = '0.5';
+    });
+  });
+
+  // Send email
+  function sendEmail() {
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const subject = document.getElementById('subject').value.trim();
+    const message = document.getElementById('message').value.trim();
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('formStatus');
+
+    // Basic validation
+    if (!firstName || !email || !message) {
+      status.textContent = '// Please fill in your name, email, and message.';
+      status.className = 'form-status error';
+      return;
+    }
+
+    // Loading state
+    btn.classList.add('loading');
+    btn.disabled = true;
+    status.className = 'form-status';
+
+    const templateParams = {
+      from_name: `${firstName} ${lastName}`.trim(),
+      from_email: email,
+      subject: subject || 'New message from sierrawilliams.ca',
+      message: message,
+      reply_to: email,
+    };
+
+    emailjs.send('service_vvxcblm', 'template_rchefxl', templateParams)
+      .then(() => {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        status.textContent = '✦ Message sent — I\'ll be in touch soon.';
+        status.className = 'form-status success';
+        // Clear fields
+        document.getElementById('firstName').value = '';
+        document.getElementById('lastName').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('subject').value = '';
+        document.getElementById('message').value = '';
+      })
+      .catch((err) => {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        status.textContent = '// Something went wrong. Try emailing me directly at hello@sierrawilliams.ca';
+        status.className = 'form-status error';
+        console.error('EmailJS error:', err);
+      });
+  }
+</script>
+</body>
+</html>
